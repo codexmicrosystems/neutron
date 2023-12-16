@@ -9,20 +9,17 @@ use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 pub const CR: u8 = 13;
 pub const LF: u8 = 10;
 
-pub struct SerialConnection {
-    serial_port: Box<dyn SerialPort>,
-    serial_path: String,
-    baud_rate: u32,
-    data_bits: DataBits,
-    flow_control: FlowControl,
-    parity: Parity,
-    stop_bits: StopBits,
-    timeout: Duration,
+pub struct SerialConnectionConfig {
+    pub baud_rate: u32,
+    pub data_bits: DataBits,
+    pub flow_control: FlowControl,
+    pub parity: Parity,
+    pub stop_bits: StopBits,
+    pub timeout: Duration,
 }
 
-impl SerialConnection {
-    #[must_use]
-    pub fn new(&self, serial_path: String) -> Self {
+impl SerialConnectionConfig {
+    pub fn default(&self) -> Self {
         let baud_rate: u32 = 115200;
         let data_bits: DataBits = DataBits::Eight;
         let flow_control: FlowControl = FlowControl::None;
@@ -30,18 +27,7 @@ impl SerialConnection {
         let stop_bits: StopBits = StopBits::One;
         let timeout: Duration = Duration::from_millis(10);
 
-        let serial_port: Box<dyn SerialPort> = serialport::new(self.serial_path.clone(), self.baud_rate)
-            .data_bits(self.data_bits)
-            .flow_control(self.flow_control)
-            .parity(self.parity)
-            .stop_bits(self.stop_bits)
-            .timeout(self.timeout)
-            .open()
-            .expect("[ERROR]: Unable to Open Serial Port");
-
         return Self {
-            serial_port,
-            serial_path,
             baud_rate,
             data_bits,
             flow_control,
@@ -51,21 +37,49 @@ impl SerialConnection {
         };
     }
 
-    pub fn set_params(
-        &mut self,
+    pub fn new(
+        &self,
         baud_rate: u32,
         data_bits: DataBits,
         flow_control: FlowControl,
         parity: Parity,
         stop_bits: StopBits,
         timeout: Duration,
-    ) {
-        self.baud_rate = baud_rate;
-        self.data_bits = data_bits;
-        self.flow_control = flow_control;
-        self.parity = parity;
-        self.stop_bits = stop_bits;
-        self.timeout = timeout;
+    ) -> Self {
+        return Self {
+            baud_rate,
+            data_bits,
+            flow_control,
+            parity,
+            stop_bits,
+            timeout,
+        };
+    }
+}
+
+pub struct SerialConnection {
+    serial_port: Box<dyn SerialPort>,
+    serial_path: String,
+    serial_connection_config: SerialConnectionConfig,
+}
+
+impl SerialConnection {
+    #[must_use]
+    pub fn new(serial_path: String, serial_connection_config: SerialConnectionConfig) -> Self {
+        let serial_port: Box<dyn SerialPort> = serialport::new(serial_path.clone(), serial_connection_config.baud_rate)
+            .data_bits(serial_connection_config.data_bits)
+            .flow_control(serial_connection_config.flow_control)
+            .parity(serial_connection_config.parity)
+            .stop_bits(serial_connection_config.stop_bits)
+            .timeout(serial_connection_config.timeout)
+            .open()
+            .expect("[ERROR]: Unable to Open Serial Port");
+
+        return Self {
+            serial_port,
+            serial_path,
+            serial_connection_config,
+        };
     }
 
     pub fn write_string(&mut self, string: &str) {
