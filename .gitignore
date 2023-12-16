@@ -1,5 +1,6 @@
 # Rust
 /target
+/examples/send_serial_command/target
 
 # Sphinx
 build/
