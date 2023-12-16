@@ -19,7 +19,7 @@ pub struct SerialConnectionConfig {
 }
 
 impl SerialConnectionConfig {
-    pub fn default(&self) -> Self {
+    pub fn default() -> Self {
         let baud_rate: u32 = 115200;
         let data_bits: DataBits = DataBits::Eight;
         let flow_control: FlowControl = FlowControl::None;
@@ -38,7 +38,6 @@ impl SerialConnectionConfig {
     }
 
     pub fn new(
-        &self,
         baud_rate: u32,
         data_bits: DataBits,
         flow_control: FlowControl,
